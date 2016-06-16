@@ -8,8 +8,13 @@ The automation script run-ycsb-saturation depdends on Couchbase testrunner (http
 * python 2.6 or 2.7
 * pip or easy_install
 
-```pip install paramiko```
-```pip install boto```
+```
+pip install paramiko
+```
+
+```
+pip install boto
+```
 
 # Git clone the ycsb-automation repository
 
