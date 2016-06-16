@@ -1,10 +1,11 @@
+
 set -x
 # Expect the following directories under ${YTOP}
 # YCSB - git clone of a YCSB repo
 # testrunner - CB testrunner repo
 # cb-ycsb-automation - specific scripts developed to automate the saturation, scale out, collecting results, 
 
-runid=4VM-111
+runid=ID-NOTSPECIFIED
 cbhost=
 cluster_hosts=
 cbhosts_rest=
