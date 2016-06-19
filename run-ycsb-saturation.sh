@@ -1,8 +1,13 @@
-
 set -x
-# Expect the following directories under ${YTOP}
-# YCSB - git clone of a YCSB repo
-# testrunner - CB testrunner repo
+# Expect the following directories under ${YTOP}, this script will git clone the following repos
+# YCSB - https://github.com/brianfrankcooper/YCSB
+# couchbase test runner - https://github.com/couchbase/testrunner
+# You first follow instructions from couchbase testrunner pre-requisites (see https://github.com/couchbase/testrunner/blob/master/README.md)
+#    - Python 2.6 or 2.7
+#    - pip or easy_install
+#    - pip install paramiko
+#    - pip install boto
+#    - yum install mvn
 # cb-ycsb-automation - specific scripts developed to automate the saturation, scale out, collecting results, 
 
 runid=ID-NOTSPECIFIED
@@ -10,29 +15,28 @@ cbhost=
 cluster_hosts=
 cbhosts_rest=
 maxclients=1
-maxthreads=8
-stepincrease=4
-recordcount=100000
-opscount=10000000
-exec_time=120
-stale="OK"
-wait_time=60
-loaddata=N
 version=4.5.0
 buildnum=0
 buildurl="NONE"
 build_install="N"
+
+# YCSB software specific properties, which binding to use etc.
 ycsb_install="N"
 ycsb_binding="SDK2" # or "REST"
-ycsb_run="N"
 ycsb_cbsdk1_repo="https://github.com/brianfrankcooper/YCSB.git"
-#ycsb_cbsdk2_repo="https://github.com/daschl/YCSB.git"
-ycsb_cbsdk2_repo="https://github.com/couchbaselabs/YCSB"
+# ycsb_cbsdk2_repo="https://github.com/daschl/YCSB.git"
+# As of Apr/2016, the couchbaselabs have been submitted and accepted upstream in the brianfrankcooper repo
+# ycsb_cbsdk2_repo="https://github.com/couchbaselabs/YCSB" (no longer needed)
+ycsb_cbsdk2_repo="https://github.com/brianfrankcooper/YCSB.git"
 ycsb_cbrest_repo="https://github.com/subalakr/YCSB.git"
 ycsb_cbsdk1db="couchbase"
 ycsb_cbsdk2db="couchbase2"
 ycsb_cbrestdb="couchbaserest"
 ycsb_db=${ycsb_cbsdk2db}
+
+# YCSB couchbase specific configurations e.g. type if index, index create statement for each index type and which workload to run
+loaddata=N
+ycsb_run="N"
 memindex="N"
 iot="N"
 index_name="wle_idx"
@@ -40,9 +44,15 @@ iot_index_stmt="create index ${index_name} on default(meta().id, field1, field0,
 metaid_index_stmt="create index ${index_name} on default(meta().id)"
 create_index_stmt=${metaid_index_stmt}
 workload="workloade"
+maxthreads=8
+stepincrease=4
+recordcount=100000
+opscount=10000000
+exec_time=120
+stale="OK"
+wait_time=60
 csv_conversion="Y"
-data_mem_quota=30000
-index_mem_quota=30000
+
 
 export YTOP=`pwd`
 
@@ -135,7 +145,24 @@ while getopts "D:C:S:h:lBW:miyR:t:s:r:e:b:u:c:v:V:" opt; do
     esac
 done
 
-echo "Inputs: maxthreads= ${maxthreads}, stepincrease=${stepincrease}, recordcount=${recordcount}, exec_time=${exec_time}, buildnum=${buildnum}, loaddata=${loaddata}, maxclients=${maxclients}, build_install=${build_install}, ycsb_run=${ycsb_run}"
+################ first let's sourcing in the additional properties ######################################
+
+# cluster node OS root access, change it in the ycsb.cfg file, the latter should reside in the same directory as run-ycsb-saturation.sh
+ycsb_config_file="ycsb.cfg"
+root="root"
+password="password"
+
+# data path for Data node, change it the your data directory
+data_path="/data"
+
+# index path for Indexer node, change it to the directory path on your node where you plan to store index data
+index_path="/data"
+
+# Cluster quota for Data and Index
+data_mem_quota=30000
+index_mem_quota=30000
+
+. ./${ycsb_config_file}
 
 ##########################  Install a build  ####################################################
 
@@ -151,8 +178,47 @@ then
     fi
 
     # generate the server.ini file to be used for installation
+    echo "" > server.ini
+ 
+    cat  <<EOF > server.ini
+
+#!/bin/bash
+
+[global]
+username:${root}
+password:${password}
+port:8091
+index_port:9102
+n1ql_port:8093
+
+data_path=${data_path}
+index_path=${index_path}
+
+EOF
+
+    hcount=$((${#cluster_hosts[@]}))
+    echo "[cluster1]"  >> foo.ini
+    for idx in `seq 1 ${hcount}`
+    do
+	echo "${idx}:_${idx}" >> foo.ini
+    done
+    
+    echo "[servers]" >> foo.ini
+    for idx in `seq 1 ${hcount}`
+    do
+	echo "${idx}:_${idx}"  >> foo.ini
+    done
+    
+    for idx in `seq 1 ${hcount}`
+    do
+	echo "[_${idx}]"  >> foo.ini
+	echo "ip:${cluster_hosts[${idx}-1]}"  >> foo.ini
+    done
     
     
+    # Finish geneating the server.ini file
+    
+    # install the build
     cd ${YTOP}/testrunner
     if [ $buildurl != "NONE" ]
     then
@@ -172,7 +238,7 @@ then
     # add other nodes and rebalancing
     echo "##################### Adding and rebalancing nodes ####################################"
 
-    # all other nodes are joinging the first node. host count exclude the first host
+    # all other nodes are joining the first node. host count exclude the first host
     hcount=$((${#cluster_hosts[@]}-1))
     ns_host_list="ns_1@${cbhost}"
     indexer_nodes_ref=()
@@ -188,7 +254,8 @@ then
 	# adding the next node to the cluster
 	if [ ${idx} -gt 0 ]
 	then 
-	    curl -u Administrator:password ${cbhost}:8091/controller/addNode -d "hostname=${cluster_hosts[idx]}&user=Administrator&password=password&services=${services[idx]}"
+	    curl -u Administrator:password ${cbhost}:8091/controller/addNode \
+		 -d "hostname=${cluster_hosts[idx]}&user=Administrator&password=password&services=${services[idx]}"
 	    # also build of host list to be rebalance, concat the string
 	    ns_host_list="${ns_host_list},ns_1@${cluster_hosts[idx]}"
 	fi
@@ -202,7 +269,7 @@ then
     # Waiting for rebalance to finish
     sleep 60
     echo "create default bucket"
-    curl -XPOST http://${cbhost}:8091/pools/default/buckets -u Administrator:password -d name=default \
+    curl -X POST http://${cbhost}:8091/pools/default/buckets -u Administrator:password -d name=default \
 	 -d ramQuotaMB=${data_mem_quota} -d authType=none -d proxyPort=11224 -d threadsNumber=8 \
 	 -d evictionPolicy=fullEviction
 
@@ -229,7 +296,8 @@ then
     for j in ${indexer_nodes_ref[@]}
     do
 	# Create Index before load so that we don't wait for index creation to finish. The quoting of the statement is rather nasty
-	curl -XPOST -u Administrator:password http://${cbhost}:8093/query/service -d "statement=${create_index_stmt/${index_name}/${index_name}_${j}}"
+	curl -XPOST -u Administrator:password http://${cbhost}:8093/query/service \
+	     -d "statement=${create_index_stmt/${index_name}/${index_name}_${j}}"
     done
 fi
 
@@ -243,14 +311,14 @@ then
     for c in `seq 1 ${maxclients}`
     do
 	cd $YTOP
-	if [ -d ./YCSB_SDK2_${c} ]
+	if [ -d ./YCSB_SDK1_${c} ]
 	then
 	    rm -rf ./YCSB_SDK1_${c}
 	    rm -rf ./YCSB_SDK2_${c}
-	    rm -rf ./YCSB_REST_${c}
+	    #rm -rf ./YCSB_REST_${c}
 	fi
 
-	# Clone Brian Cooper's repo
+	# Clone Brian Cooper's repo, this is now the most up-to-date, Michael's repo and Subhashni's repo are no longer needed
 	git clone ${ycsb_cbsdk1_repo}
 	mv YCSB YCSB_SDK1_${c}
 	cd ${YTOP}/YCSB_SDK1_${c}
@@ -269,13 +337,13 @@ then
 	mvn -pl com.yahoo.ycsb:${ycsb_cbsdk2db}-binding -am clean package -Dmaven.test.skip -Dcheckstyle.skip=true
 
 	# Clone the YCSB Subhashni's repo
-	cd ${YTOP}
-	git clone ${ycsb_cbrest_repo}
-	mv YCSB YCSB_REST_${c}
-	cd ${YTOP}/YCSB_REST_${c}xf
-	git fetch origin
-	git checkout origin/refresh
-	mvn -pl com.yahoo.ycsb:${ycsb_cbrestdb}-binding -am clean package -Dmaven.test.skip -Dcheckstyle.skip=true
+	#cd ${YTOP}
+	#git clone ${ycsb_cbrest_repo}
+	#mv YCSB YCSB_REST_${c}
+	#cd ${YTOP}/YCSB_REST_${c}xf
+	#git fetch origin
+	#git checkout origin/refresh
+	#mvn -pl com.yahoo.ycsb:${ycsb_cbrestdb}-binding -am clean package -Dmaven.test.skip -Dcheckstyle.skip=true
 	
     done
     echo "Install YCSB done!"    
@@ -289,7 +357,7 @@ then
     echo "Load YCSB data ...."
     
     # Go to the first YCSB client directory and run the load from there
-    if [ ! -d ${YTOP}/YCSB_SDK2_1 ]
+    if [ ! -d ${YTOP}/YCSB_SDK2_1]
     then
 	echo "YCSB software has not been installed, please run <command> -y Y to install YCSB"
 	exit
