@@ -179,7 +179,7 @@ then
     fi
 
     # generate the server.ini file to be used for installation
-    echo "" > ${serverini_file}
+    echo "" > "${serverini_file}"
  
     cat  <<EOF > "${serverini_file}"
 
