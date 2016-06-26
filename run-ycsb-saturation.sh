@@ -19,6 +19,7 @@ version=4.5.0
 buildnum=0
 buildurl="NONE"
 build_install="N"
+severini_file="server.ini"
 
 # YCSB software specific properties, which binding to use etc.
 ycsb_install="N"
@@ -178,9 +179,9 @@ then
     fi
 
     # generate the server.ini file to be used for installation
-    echo "" > server.ini
+    echo "" > ${serverini_file}
  
-    cat  <<EOF > server.ini
+    cat  <<EOF > ${serverini_file}
 
 #!/bin/bash
 
@@ -196,23 +197,24 @@ index_path=${index_path}
 
 EOF
 
+    # write out cluster information into the server.ini
     hcount=$((${#cluster_hosts[@]}))
-    echo "[cluster1]"  >> foo.ini
+    echo "[cluster1]"  >> ${serverini_file}
     for idx in `seq 1 ${hcount}`
     do
-	echo "${idx}:_${idx}" >> foo.ini
+	echo "${idx}:_${idx}" >> ${serverini_file}
     done
     
-    echo "[servers]" >> foo.ini
+    echo "[servers]" >> ${serverini_file}
     for idx in `seq 1 ${hcount}`
     do
-	echo "${idx}:_${idx}"  >> foo.ini
+	echo "${idx}:_${idx}"  >> ${serverini_file}
     done
     
     for idx in `seq 1 ${hcount}`
     do
-	echo "[_${idx}]"  >> foo.ini
-	echo "ip:${cluster_hosts[${idx}-1]}"  >> foo.ini
+	echo "[_${idx}]"  >> ${serverini_file}
+	echo "ip:${cluster_hosts[${idx}-1]}"  >> ${serverini_file}
     done
     
     
