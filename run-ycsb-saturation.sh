@@ -181,7 +181,7 @@ then
     # generate the server.ini file to be used for installation
     echo "" > ${serverini_file}
  
-    cat  <<EOF > ${serverini_file}
+    cat  <<EOF > "${serverini_file}"
 
 #!/bin/bash
 
@@ -199,22 +199,22 @@ EOF
 
     # write out cluster information into the server.ini
     hcount=$((${#cluster_hosts[@]}))
-    echo "[cluster1]"  >> ${serverini_file}
+    echo "[cluster1]"  >> "${serverini_file}"
     for idx in `seq 1 ${hcount}`
     do
-	echo "${idx}:_${idx}" >> ${serverini_file}
+	echo "${idx}:_${idx}" >> "${serverini_file}"
     done
     
-    echo "[servers]" >> ${serverini_file}
+    echo "[servers]" >> "${serverini_file}"
     for idx in `seq 1 ${hcount}`
     do
-	echo "${idx}:_${idx}"  >> ${serverini_file}
+	echo "${idx}:_${idx}"  >> "${serverini_file}"
     done
     
     for idx in `seq 1 ${hcount}`
     do
-	echo "[_${idx}]"  >> ${serverini_file}
-	echo "ip:${cluster_hosts[${idx}-1]}"  >> ${serverini_file}
+	echo "[_${idx}]"  >> "${serverini_file}"
+	echo "ip:${cluster_hosts[${idx}-1]}"  >> "${serverini_file}"
     done
     
     
