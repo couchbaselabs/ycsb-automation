@@ -179,9 +179,9 @@ then
     fi
 
     # generate the server.ini file to be used for installation
-    echo "" > "${serverini_file}"
+    echo "" > ${serverini_file}
  
-    cat  <<EOF > "${serverini_file}"
+    cat  <<EOF > ${serverini_file}
 
 #!/bin/bash
 
@@ -224,9 +224,9 @@ EOF
     cd ${YTOP}/testrunner
     if [ $buildurl != "NONE" ]
     then
-	python scripts/install.py -i ${YTOP}/server.ini -p product=cb,version=${version}-${buildnum},parallel=true,init_nodes=False,url=${buildurl}
+	python scripts/install.py -i ${YTOP}/${serverini_file} -p product=cb,version=${version}-${buildnum},parallel=true,init_nodes=False,url=${buildurl}
     else
-	python scripts/install.py -i ${YTOP}/server.ini -p product=cb,version=${version}-${buildnum},parallel=true,init_nodes=False
+	python scripts/install.py -i ${YTOP}/${serverini_file} -p product=cb,version=${version}-${buildnum},parallel=true,init_nodes=False
     fi
     
     # Setup the first  node, use this node for index and query
