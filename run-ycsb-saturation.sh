@@ -197,7 +197,7 @@ index_path=${index_path}
 EOF
 
     # write out cluster information into the server.ini
-    hcount=$((${#cluster_hosts[@]}+1))
+    hcount=$((${#cluster_hosts[@]}))
     echo "[cluster1]"  >> ${YTOP}/${serverini_file}
     for idx in `seq 1 ${hcount}`
     do
