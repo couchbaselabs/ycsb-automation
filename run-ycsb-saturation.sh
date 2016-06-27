@@ -213,7 +213,7 @@ EOF
     for idx in `seq 1 ${hcount}`
     do
 	echo "[_${idx}]"  >> ${YTOP}/${serverini_file}
-	echo "ip:${cluster_hosts[$((idx+1))]}"  >> ${YTOP}/${serverini_file}
+	echo "ip:${cluster_hosts[${idx}-1]}"  >> ${YTOP}/${serverini_file}
     done
     
     
