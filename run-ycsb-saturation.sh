@@ -194,6 +194,10 @@ n1ql_port:8093
 data_path=${data_path}
 index_path=${index_path}
 
+[membase]
+rest_username:${rest_username}
+rest_password:${rest_password}
+
 EOF
 
     # write out cluster information into the server.ini
