@@ -54,11 +54,13 @@ stale="OK"
 wait_time=60
 csv_conversion="Y"
 
+# additional properties file, default example is ycsb.cfg, overwrite with -f <your properties file>
+ycsb_config_file="ycsb.cfg"
 
 export YTOP=`pwd`
 
 # Parse input
-while getopts "D:C:S:h:lBW:miyR:t:s:r:e:b:u:c:v:V:" opt; do
+while getopts "D:C:S:h:lBW:miyR:t:s:r:e:b:u:c:v:V:f:" opt; do
     case "$opt" in
 	D) # runiD
 	    runid=$OPTARG
@@ -143,13 +145,14 @@ while getopts "D:C:S:h:lBW:miyR:t:s:r:e:b:u:c:v:V:" opt; do
 	   ;;
         V) version=$OPTARG
 	   ;;
+	f) ycsb_config_file=$OPTARG
+	   ;;
     esac
 done
 
 ################ first let's sourcing in the additional properties ######################################
 
 # cluster node OS root access, change it in the ycsb.cfg file, the latter should reside in the same directory as run-ycsb-saturation.sh
-ycsb_config_file="ycsb.cfg"
 root="root"
 password="password"
 
