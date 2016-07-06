@@ -286,7 +286,7 @@ EOF
     if [ ${#indexer_nodes_ref[*]} -gt 0 ]
     then 
 	curl -u Administrator:password ${cluster_hosts[${indexer_nodes_ref[0]}]}:9102/settings | python -m json.tool > ./index-settings.json
-	sed -i '/indexer.settings.wal_size/c\    "indexer.settings.wal_size": 40960,' index-settings.json
+	sed -i '/indexer.settings.wal_size/c\    "indexer.settings.wal_size": 81920,' index-settings.json
 	sed -i '/indexer.settings.scan_timeout/c\    "indexer.settings.scan_timeout": 120000,' index-settings.json
 	sed -i '/indexer.settings.inmemory_snapshot.interval/c\    "indexer.settings.inmemory_snapshot.interval": 80,' index-settings.json
 	if [ ${memindex} == "N" ]
