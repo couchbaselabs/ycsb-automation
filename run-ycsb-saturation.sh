@@ -366,7 +366,7 @@ then
     echo "Load YCSB data ...."
     
     # Go to the first YCSB client directory and run the load from there
-    if [ ! -d ${YTOP}/YCSB_SDK2_1]
+    if [ ! -d ${YTOP}/YCSB_SDK2_1 ]
     then
 	echo "YCSB software has not been installed, please run <command> -y Y to install YCSB"
 	exit
