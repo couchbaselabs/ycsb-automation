@@ -288,7 +288,7 @@ EOF
 	curl -u Administrator:password ${cluster_hosts[${indexer_nodes_ref[0]}]}:9102/settings | python -m json.tool > ./index-settings.json
 	sed -i '/indexer.settings.wal_size/c\    "indexer.settings.wal_size": 81920,' index-settings.json
 	sed -i '/indexer.settings.scan_timeout/c\    "indexer.settings.scan_timeout": 120000,' index-settings.json
-	sed -i '/indexer.settings.inmemory_snapshot.interval/c\    "indexer.settings.inmemory_snapshot.interval": 80,' index-settings.json
+	sed -i '/indexer.settings.inmemory_snapshot.fdb.interval/c\    "indexer.settings.inmemory_snapshot.fdb.interval": 80,' index-settings.json
 	if [ ${memindex} == "N" ]
 	then
 	    sed -i '/indexer.settings.storage_mode/c\    "indexer.settings.storage_mode": "forestdb",' index-settings.json
