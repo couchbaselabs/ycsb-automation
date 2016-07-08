@@ -382,7 +382,7 @@ then
     ./bin/ycsb load couchbase2 \
 	       -jvm-args=-Dcom.couchbase.connectTimeout\=300000 \
 	       -jvm-args=-Dcom.couchbase.kvTimeout\=60000 \
-	       -P workloads/${workload} -p couchbase.host=${cbhost} -threads 6 \
+	       -P workloads/${workload} -p couchbase.host=${cbhost} -threads 16 \
 	       -p recordcount=${recordcount}  2> ${YTOP}/${runid}.loadlog 1>  ${YTOP}/${runid}.loadres
 
     # sleep for a bit to wait for the index to complete
